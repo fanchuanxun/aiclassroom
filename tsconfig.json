@@ -1,0 +1,39 @@
+{
+  "extends": "./packages/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["apps/web/src/*"],
+      "@aiclassroom/image-service": ["packages/image-service/src/index.ts"],
+      "@aiclassroom/image-service/*": ["packages/image-service/src/*"],
+      "@aiclassroom/types": ["packages/types/src/index.ts"],
+      "@aiclassroom/types/*": ["packages/types/src/*"],
+      "@aiclassroom/llm": ["packages/llm/src/index.ts"],
+      "@aiclassroom/llm/*": ["packages/llm/src/*"],
+      "@aiclassroom/agents": ["packages/agents/src/index.ts"],
+      "@aiclassroom/agents/*": ["packages/agents/src/*"],
+      "@aiclassroom/prompts": ["packages/prompts/src/index.ts"],
+      "@aiclassroom/prompts/*": ["packages/prompts/src/*"],
+      "@aiclassroom/ui": ["packages/ui/src/index.ts"],
+      "@aiclassroom/ui/*": ["packages/ui/src/*"],
+      "@aiclassroom/tts": ["packages/tts/src/index.ts"],
+      "@aiclassroom/video-service": ["packages/video-service/src/index.ts"],
+      "@aiclassroom/video-service/*": ["packages/video-service/src/*"],
+      "@aiclassroom/db": ["packages/db/src/index.ts"],
+      "@aiclassroom/db/*": ["packages/db/src/*"],
+      "@aiclassroom/runtime": ["packages/runtime/src/index.ts"],
+      "@aiclassroom/runtime/*": ["packages/runtime/src/*"],
+      "@/*": ["apps/web/src/*"]
+    }
+  },
+  "include": [
+    "apps/web/src/**/*",
+    "apps/web/app/**/*",
+    "packages/*/src/**/*",
+    "vitest.config.mts",
+    "vitest.setup.ts"
+  ],
+  "exclude": ["node_modules", ".next", "dist", "coverage"]
+}

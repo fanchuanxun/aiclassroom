@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# env — 真实密钥绝不进 Git
+.env
+.env.local
+.env.*.local
+
+# testing
+coverage/
+
+# misc
+.DS_Store
+*.log
+.vercel
+
+# 临时 E2E 探针与证据（绝不进 Git；含真实 API 调用产物）
+_e2e_*
+
+# 编辑器 / 工具内部目录
+.workbuddy/
+.claude/
+.vscode/*
+!.vscode/extensions.json
+.idea/

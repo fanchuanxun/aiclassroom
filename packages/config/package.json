@@ -1,0 +1,12 @@
+{
+  "name": "@aiclassroom/config",
+  "version": "0.1.0",
+  "private": true,
+  "description": "共享工程配置：TypeScript strict 基线",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json"
+  },
+  "files": [
+    "tsconfig.base.json"
+  ]
+}

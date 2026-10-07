@@ -1,0 +1,21 @@
+{
+  "name": "@aiclassroom/image-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "@aiclassroom/db": "workspace:*",
+    "@aiclassroom/llm": "workspace:*",
+    "@aiclassroom/types": "workspace:*"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.0.0"
+  }
+}

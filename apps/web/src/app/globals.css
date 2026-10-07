@@ -1,0 +1,26 @@
+/* @spec docs/TECH-STACK.md §A.1
+ * Tailwind 4 入口。@source 需覆盖 UI 包源码，否则其工具类不会被生成。
+ * 相对路径基于本文件位置 apps/web/src/app/globals.css。 */
+@import "tailwindcss";
+@source "../../../packages/ui/src";
+@source "../";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

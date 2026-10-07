@@ -1,0 +1,24 @@
+{
+  "name": "@aiclassroom/llm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LLM 唯一入口：Provider 解析 / generate / stream / structuredOutput / 错误分类 / trace",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./presets": "./src/presets.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.50",
+    "@ai-sdk/deepseek": "^3.0.40",
+    "@ai-sdk/google": "^4.0.65",
+    "@ai-sdk/openai": "^4.0.62",
+    "@ai-sdk/openai-compatible": "^3.0.45",
+    "@aiclassroom/types": "workspace:*",
+    "ai": "^7.0.94",
+    "zod": "^4.5.4"
+  }
+}

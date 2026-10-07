@@ -1,0 +1,18 @@
+{
+  "name": "@aiclassroom/agents",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent 流水线：retrieve → plan → draft → validate → critique → finalize",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@aiclassroom/llm": "workspace:*",
+    "@aiclassroom/prompts": "workspace:*",
+    "@aiclassroom/types": "workspace:*",
+    "zod": "^4.5.4"
+  }
+}

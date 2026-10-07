@@ -1,0 +1,8 @@
+/* @spec docs/TECH-STACK.md
+ * UI 包的基础样式。组件本身只依赖工具类（由消费方 Tailwind 扫描生成），
+ * 这里仅放少量全局基线，避免消费方漏引时报错。 */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+}

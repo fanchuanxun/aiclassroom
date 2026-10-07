@@ -1,0 +1,15 @@
+{
+  "name": "@aiclassroom/prompts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "版本化 LLM prompt 模板，禁止内联在业务代码",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@aiclassroom/types": "workspace:*"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@aiclassroom/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AIClassRoom Next.js 主应用",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@aiclassroom/agents": "workspace:*",
+    "@aiclassroom/db": "workspace:*",
+    "@aiclassroom/llm": "workspace:*",
+    "@aiclassroom/runtime": "workspace:*",
+    "@aiclassroom/types": "workspace:*",
+    "@aiclassroom/ui": "workspace:*",
+    "dexie": "^4.4.5",
+    "immer": "^11.1.18",
+    "next": "^16.3.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "tailwindcss": "^4.3.3"
+  }
+}

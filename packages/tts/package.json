@@ -1,0 +1,15 @@
+{
+  "name": "@aiclassroom/tts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TTS / ASR 抽象。MVP 用 Web Speech API，后续可替换为云端 TTS",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@aiclassroom/types": "workspace:*"
+  }
+}
