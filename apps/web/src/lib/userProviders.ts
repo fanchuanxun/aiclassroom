@@ -21,6 +21,8 @@ import {
   saveUserProvider,
   deleteUserProvider,
   setActiveUserProvider,
+  applyUserProviderPlan,
+  planPresetProviderRepair,
 } from "@aiclassroom/db";
 
 interface UserProvidersState {
@@ -65,25 +67,69 @@ export const useUserProviders = create<UserProvidersState>((set) => ({
   },
 }));
 
-/** 首次进入时把内置 11 家 Provider 作为可配置项写入 Dexie（Key 留空，由用户填写或回落服务端）。 */
-export async function ensureDefaultProviders(): Promise<void> {
-  const existing = await listUserProviders();
-  if (existing.length > 0) return;
-  const now = new Date().toISOString();
-  for (const p of PROVIDER_PRESETS) {
-    await saveUserProvider({
-      id: createId(),
-      providerId: p.id,
-      name: p.name,
-      adapter: p.adapter,
-      apiKey: "",
-      baseUrl: p.defaultBaseUrl,
-      model: p.models[0]?.id ?? "",
-      enabled: p.id === CUSTOM_PROVIDER_ID ? false : p.id === "qwen",
-      createdAt: now,
-      updatedAt: now,
+/**
+ * 默认启用的内置 Provider。
+ * 取 qwen（通义千问 / 百炼，adapter = openai-compatible），与服务端
+ * OPENAI_COMPATIBLE_BASE_URL / OPENAI_COMPATIBLE_API_KEY 的示例配置对齐（见 .env.example）。
+ */
+const DEFAULT_ACTIVE_PRESET = "qwen";
+
+/** 单飞句柄：dev 下 React StrictMode 会把 effect 调用两次，必须只真正执行一次。 */
+let seeding: Promise<void> | null = null;
+
+/**
+ * 首次进入时把内置 11 家 Provider 作为可配置项写入 Dexie（Key 留空，由用户填写或回落服务端），
+ * 并对历史数据做一次幂等修复。
+ *
+ * 幂等性来自两层保证：
+ * 1) 单飞 —— 同一模块实例内的并发调用复用同一个 Promise；
+ * 2) 事务内二次校验 —— `applyUserProviderPlan` 把「读空表」和「写入」放在同一个
+ *    IndexedDB 事务里，跨模块实例（dev 热重载）或多标签页的并发调用也会被串行化。
+ *
+ * 修复内容：清理历史重复写入的内置 Provider，并保证恰好有一个「当前使用」，
+ * 避免 activeProvider() 回落到排序不确定的 providers[0]。
+ */
+export function ensureDefaultProviders(): Promise<void> {
+  if (!seeding) {
+    seeding = seedDefaultProviders().catch((err: unknown) => {
+      seeding = null; // 失败不缓存，允许下次重试
+      throw err;
     });
   }
+  return seeding;
+}
+
+async function seedDefaultProviders(): Promise<void> {
+  const presetIds = PROVIDER_PRESETS.map((p) => p.id);
+
+  await applyUserProviderPlan((existing) => {
+    // 已有数据：只做去重 + 补齐「当前使用」，不重新 seed。
+    if (existing.length > 0) {
+      const { remove, activeId } = planPresetProviderRepair(
+        existing,
+        presetIds,
+        DEFAULT_ACTIVE_PRESET,
+      );
+      return { remove, activeId };
+    }
+
+    // 空库：写入内置 Provider，默认启用 DEFAULT_ACTIVE_PRESET。
+    const now = new Date().toISOString();
+    return {
+      upsert: PROVIDER_PRESETS.map((p) => ({
+        id: createId(),
+        providerId: p.id,
+        name: p.name,
+        adapter: p.adapter,
+        apiKey: "",
+        baseUrl: p.defaultBaseUrl,
+        model: p.models[0]?.id ?? "",
+        enabled: p.id === DEFAULT_ACTIVE_PRESET,
+        createdAt: now,
+        updatedAt: now,
+      })),
+    };
+  });
 }
 
 /** 当前使用的 Provider（enabled 优先，否则取第一个） */
