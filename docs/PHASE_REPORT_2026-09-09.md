@@ -7,6 +7,15 @@
 
 ---
 
+> **后续状态更新（2026-10-07）**
+> 本报告中标注为 UNVERIFIED 的浏览器端到端项——Dexie 持久化 / 重开、生成 → 进入课堂 → 播放、
+> Provider 切换——**已在真实浏览器中实测通过**；TTS 实际发声、Browser Key 浏览器填写流程、
+> 第二家真实厂商凭据、性能预算采样仍未验证。
+> 同时修复了实测暴露的两个 Provider 缺陷（`saveUserProvider` 无条件重写全表 `enabled`；
+> `ensureDefaultProviders` 在 `reactStrictMode` 下重复 seed）。
+> 详见 `docs/BROWSER-E2E-REPORT_2026-10-07.md` 与 `docs/CHANGELOG.md` 2026-10-07 段。
+> **本报告正文保持 2026-09-09 当时状态，不做改写。**
+
 ## 0. 本次修复的关键缺陷（产品级，非瑕疵）
 
 ### 🔴 双 `app` 目录遮蔽（若不修，整个产品无法被打包/发布）

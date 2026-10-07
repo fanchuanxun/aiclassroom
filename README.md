@@ -9,7 +9,7 @@
   <img alt="React" src="https://img.shields.io/badge/React-19-087ea4?logo=react&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white">
   <img alt="pnpm" src="https://img.shields.io/badge/pnpm-monorepo-f69220?logo=pnpm&logoColor=white">
-  <img alt="Vitest" src="https://img.shields.io/badge/tests-63%20passed-6da544?logo=vitest&logoColor=white">
+  <img alt="Vitest" src="https://img.shields.io/badge/tests-117%20passed-6da544?logo=vitest&logoColor=white">
 </p>
 
 ---
@@ -111,7 +111,7 @@ GLM、通义千问、Kimi、MiniMax、硅基流动、豆包、Grok 走 `openai-c
 
 ```
 AIClassRoom/
-├── docs/                      # 工程文档（SSOT，13 份）
+├── docs/                      # 工程文档（SSOT，14 份）
 ├── apps/
 │   └── web/                   # Next.js 16 主应用
 │       └── src/
@@ -166,7 +166,7 @@ pnpm build        # 生产构建
 
 ## 工程实践
 
-**测试**：63 个单测覆盖 LLM 层、Agent 流水线、播放引擎、DB 层、SSE 客户端、密钥脱敏逻辑。
+**测试**：117 个单测（12 个文件）覆盖 LLM 层、Agent 流水线、播放引擎、DB 层、SSE 客户端、密钥脱敏逻辑，以及 Provider 持久化的并发幂等与启用互斥。
 
 **错误处理与降级**：
 
@@ -184,27 +184,47 @@ pnpm build        # 生产构建
 - Browser Key 存 Dexie，随请求 body 传给服务端，服务端不落盘、不写日志
 - 禁止：硬编码 Key / 提交 Key 到 Git / `console.log` Key / trace 记录 Key 或 Authorization 头
 
-**文档即 SSOT**：13 份文档放在 `docs/`，包括 PRD、架构、Agent 架构、API、数据模型、运行时、技术栈、测试、Trace、CHANGELOG、阶段验收报告。新依赖必须先改 `TECH-STACK.md` 再安装。
+**文档即 SSOT**：14 份文档放在 `docs/`，包括 PRD、架构、Agent 架构、API、数据模型、运行时、技术栈、测试、Trace、CHANGELOG、阶段验收报告、浏览器实测报告。新依赖必须先改 `TECH-STACK.md` 再安装。
 
 ---
 
 ## 已知限制（如实标注）
 
-以下能力在开发环境（无头）中**未完成端到端验证**，需在真实浏览器中实测：
+### 已在真实浏览器实测通过（2026-10-07）
 
-- Dexie 持久化 / 关闭后重开 / Replay
-- Classroom Player 的真实音视频播放
-- Browser Key 的完整浏览器流程
-- 第二家 Provider 的切换
+| 能力 | 结果 |
+|---|---|
+| 5 个页面 + 3 个生成端点 | ✅ 全部 HTTP 200 |
+| Dexie 持久化 / 刷新后重开 | ✅ 刷新后课程仍在「课程库」 |
+| 生成 → 进入课堂 → 播放 | ✅ 大纲 → 幻灯片与讲稿 → 教学动作 → 逐句讲解播放（2 场景约 275s） |
+| Provider 切换（内置预设） | ✅ 设置页「设为当前」即时生效 |
+| 测试连接 | ✅ `/api/provider/test` 实测 433ms 返回成功 |
 
-性能预算（首页 TTI < 2s、切场景 < 300ms、生成大纲 P50 < 15s 等）当前均标记为 **UNVERIFIED**。
+完整环境、结果与证据见 [`docs/BROWSER-E2E-REPORT_2026-10-07.md`](docs/BROWSER-E2E-REPORT_2026-10-07.md)。
+
+### 仍未验证
+
+- **TTS 实际发声** —— 无头环境无音频输出设备，仅验证了讲解文本与播放控制渲染
+- **Browser Key 浏览器填写流程** —— 实测走的是服务端环境变量回落路径，未在浏览器内填写 Key 实测
+- **第二家真实厂商凭据** —— 本机仅有 DashScope 一张凭据，其余 10 家预设未逐一实测
+- **性能预算**（首页 TTI < 2s、切场景 < 300ms、生成大纲 P50 < 15s 等）—— 未做性能采样，均标记 **UNVERIFIED**
+
+### 已修复的缺陷（2026-10-07）
+
+- **`saveUserProvider` 无条件重写全表 `enabled`**：`ensureDefaultProviders` 顺序写入 11 家内置 Provider 时，
+  会把先前写入的启用项逐个关掉，最终全表 `disabled`，`activeProvider()` 回落到排序不稳定的 `providers[0]`，
+  **生效的 Provider 随机**，表现为服务端 Key 被发往不匹配的 baseURL，生成直接 `PROVIDER_ERROR` 失败。
+- **`ensureDefaultProviders` 无幂等保护**：`reactStrictMode` 下 effect 双调用，两次同时看到空表各 seed 一份，
+  产生 22 条重复记录。
+
+两处均已修复（含历史脏数据自愈），详见 [`docs/CHANGELOG.md`](docs/CHANGELOG.md) 2026-10-07 段。
 
 ---
 
 ## 项目缘起
 
 项目起点是《从零搭建 AI 智能体互动课堂》教学讲义，在讲义基础上完成了工程基座搭建、
-Agent 流水线落地、SSE 流式生成链路打通、63 个单测与 13 份工程文档的补齐，
+Agent 流水线落地、SSE 流式生成链路打通、117 个单测与 14 份工程文档的补齐，
 并修复了「双 app 目录遮蔽导致产品页面全部未进构建产物」等产品级缺陷。
 
 ---

@@ -71,3 +71,58 @@
 - **工程门禁**：`typecheck ✅` / `build ✅`（修复 `userProviders.ts` 未用 `maskApiKey` 导入 TS6133）/ `lint ✅ 0 error` / `test ✅ 94 passed`。
 - **仍 UNVERIFIED（诚实标注）**：浏览器内点击流 E2E（无头环境）；第二家「真实不同厂商」凭据（本机仅 DashScope 一张，P1/P2 实测均回落 DashScope，但自定义 openai-compatible 路径对真实 API 已验证）；Classroom Player 真实播放。详见 `PHASE_REPORT_2026-09-09.md` §7。
 
+---
+
+## 2026-10-07
+
+### 浏览器端到端实测（解除一批 UNVERIFIED）
+
+- **环境**：Next.js 16.3.4（Turbopack）+ Node v22.22.2 + pnpm 9.15.9；服务端环境变量走阿里云百炼（`OPENAI_COMPATIBLE_BASE_URL` / `OPENAI_COMPATIBLE_API_KEY`）。
+- **方法**：Playwright 驱动系统 Chrome 访问本机 `next dev`，采集页面状态 / 控制台错误 / 网络请求 / IndexedDB 内容并逐步截图留证。
+- **实测结论**：
+  - 5 个页面与 3 个生成端点（`/api/generate/outline`、`/scene`、`/action`）全部 HTTP 200；`/api/provider/test` 实测 `✓ 连接成功（433ms）`。
+  - 全链路跑通：提交主题 → 大纲 → 幻灯片与讲稿 → 教学动作 →「· 全部生成完成」（2 场景约 **275s**）→「进入课堂 →」→ 逐句讲解播放；暂停 / 下一步 / 停止 / 倍速控件可用。
+  - Scene 0 约 **80s** 就绪即可进入课堂（渐进式），后台继续生成后续场景。
+  - Dexie 持久化生效，刷新后课程仍在「课程库」中。
+- **解除的 UNVERIFIED**：浏览器内 Dexie 持久化 / 重开、生成 → 进入课堂 → 播放、第二家 Provider 切换。
+- **仍未验证**：TTS 实际发声（无头环境无音频输出设备）、Browser Key 浏览器填写流程、第二家**真实厂商**凭据、性能预算采样。详见 `docs/BROWSER-E2E-REPORT_2026-10-07.md` §5。
+
+### 缺陷修复（「当前使用的 Provider」不确定 → 生成随机失败）
+
+- **【严重】`packages/db/src/userProviders.ts` — `saveUserProvider` 无条件重写全表 `enabled`**
+  原实现 `const shouldEnable = p.id === cfg.id && cfg.enabled;` 在**新增**场景下
+  `cfg.id` 尚未落表，对已有记录恒为 `false`，该循环等价于「每保存一条就把其它全部禁用」。
+  `ensureDefaultProviders()` 顺序写入 11 家内置 Provider 时，会把先前写入的启用项逐个关掉，
+  **最终 11 家全部 `enabled = false`**；`activeProvider()` 回落到 `providers[0]`，而
+  `listUserProviders()` 按 `updatedAt` 排序、所有种子记录时间戳相同，排序结果不稳定 ——
+  **生效的 Provider 实际是随机的**。
+  用户可见后果：服务端环境变量的 Key（DashScope）被发往随机选中的 baseURL
+  （实测两次分别命中豆包 `ark.cn-beijing.volces.com` 与 GLM `open.bigmodel.cn`），
+  生成立刻 `GENERATION_ERROR` 鉴权失败，studio 页卡在 `outlining`。
+  修复：仅当 `cfg.enabled === true` 时才执行互斥禁用。
+- **【中】`apps/web/src/lib/userProviders.ts` — `ensureDefaultProviders` 无幂等保护**
+  仅在事务外读一次表就决定是否 seed；`next.config.ts` 已开启 `reactStrictMode`，
+  dev 下 effect 双调用，两次**同时**看到空表各写入一份 → 11 家变 **22 条**。
+  修复：新增 `applyUserProviderPlan()`，把「读取 → 规划 → 落盘」放进**同一个 IndexedDB 事务**，
+  靠 IndexedDB 对同 scope 读写事务的串行化挡住跨模块实例（dev 热重载）与多标签页的并发；
+  另加模块级单飞 Promise 兜住同实例内并发。
+- **新增 `planPresetProviderRepair()`** 做历史数据自愈：清理已产生的重复内置 Provider，
+  并在没有任何启用项时补齐默认项。**去重边界**：只清理 `providerId ∈ PROVIDER_PRESETS` 的记录；
+  用户可能刻意创建多个自定义 Provider（共用 `providerId = "custom"`），按 providerId 去重会误删真实配置。
+- 默认启用项由内联的 `p.id === "qwen"` 提为常量 `DEFAULT_ACTIVE_PRESET`，
+  与 `.env.example` 中 `OPENAI_COMPATIBLE_*` 的示例配置对齐。
+
+### 测试
+
+- `packages/db/src/userProviders.test.ts` 新增 **9** 个用例：顺序 seed 回归、并发幂等、重复加载幂等、
+  `activeId` 互斥、去重保留策略、自定义 Provider 不被误删、空输入不崩。
+- **回归用例有效性已证伪验证**：把上述严重缺陷的修复临时还原为旧逻辑重跑，该用例立即失败
+  （`AssertionError: expected [] to have a length of 1 but got +0`）；恢复修复后全绿。
+- **工程门禁**：`test ✅ 117 passed`（12 个测试文件）/ `typecheck ✅` / `lint ✅ 0 error`。
+- **浏览器实测 6/6 通过**：全新环境 11 条且自动启用 qwen；同一环境重复加载 3 次仍 11 条；
+  注入 22 条全 `disabled` 脏数据后自愈收敛到 11 条 + 自动启用 qwen；零手动配置直接生成成功。
+
+### 文档
+
+- 新增 `docs/BROWSER-E2E-REPORT_2026-10-07.md`（浏览器端到端实测报告：环境 / 结果 / 缺陷 / 证据 / 未验证项）。
+

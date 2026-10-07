@@ -124,6 +124,8 @@ pnpm dev         # 必须能启动
 
 **验收状态（2026-09-09）**：✅ **VERIFIED（API/配置/持久化/安全层）**。两条 Provider 配置路径（P1 服务端环境变量、P2 用户自定义内联）均经真实 LLM 跑通 Outline→Scene→Action（`_e2e_pipeline_custom.txt`）；`/api/provider/test` 实测 P1 533ms / P2 447ms 成功；`typecheck/build/lint/test(94 passed)` 全绿。⚠️ UNVERIFIED：浏览器内点击流 E2E（无头环境）、第二家「真实不同厂商」凭据（本机仅 DashScope 一张）。详见 `PHASE_REPORT_2026-09-09.md` §7。
 
+**后续更新（2026-10-07）**：⚠️ UNVERIFIED 中的**浏览器内点击流 E2E 已在真实浏览器实测通过**（含 Dexie 持久化 / 重开、生成 → 进入课堂 → 播放、Provider 切换）。实测同时暴露并修复了两个使「当前使用的 Provider」不确定的缺陷：`saveUserProvider` 无条件重写全表 `enabled`（导致 11 家种子后全表 `disabled`、生效项随机）、`ensureDefaultProviders` 在 `reactStrictMode` 下重复 seed（22 条重复）。「至多 1 个 active」现由事务保证并新增 9 个回归用例。详见 `docs/BROWSER-E2E-REPORT_2026-10-07.md` 与 `docs/CHANGELOG.md` 2026-10-07 段。
+
 ---
 
 ## Phase 2 / 3 / 4
